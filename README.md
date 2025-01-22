@@ -127,3 +127,7 @@ var PostType = enums.Of(&struct {
 	},
 })
 ```
+
+## TODO
+
+[] Readonly elements

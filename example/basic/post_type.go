@@ -9,7 +9,7 @@ type innerPostType struct {
 
 var PostType = enums.Of(&struct {
 	enums.Enum[*innerPostType]
-	Unknown *innerPostType
+	Unknown,
 	Post,
 	Page,
 	Note *innerPostType
