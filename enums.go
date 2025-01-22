@@ -2,6 +2,7 @@ package enums
 
 import (
 	"reflect"
+	"strings"
 )
 
 type innerElement interface {
@@ -91,6 +92,21 @@ func (e *Enum[T]) add(name string, v T) {
 	v.setName(name)
 	v.setOrdinal(len(e.values))
 	e.values = append(e.values, v)
+}
+
+func (e *Enum[T]) String() string {
+	s := strings.Builder{}
+	s.WriteString("Enum[")
+	s.WriteString(reflect.TypeFor[T]().String())
+	s.WriteString("]{")
+	for i, v := range e.values {
+		s.WriteString(v.Name())
+		if i != len(e.values)-1 {
+			s.WriteString(", ")
+		}
+	}
+	s.WriteString("}")
+	return s.String()
 }
 
 func Of[T innerElement, E innerEnum[T]](v E) E {

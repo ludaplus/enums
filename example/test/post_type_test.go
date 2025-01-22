@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"github.com/ludaplus/enums/example/basic"
 	"testing"
 )
@@ -18,4 +19,6 @@ func TestPostType(t *testing.T) {
 	if *basic.PostType.ValueOf("Post") != basic.PostType.Post {
 		t.Errorf("post should be the same")
 	}
+
+	fmt.Printf("PostType test passed: %v\n", basic.PostType)
 }
