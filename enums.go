@@ -100,7 +100,7 @@ func Of[T innerElement, E innerEnum[T]](v E) E {
 		rv = rv.Elem()
 	}
 
-	targetType := reflect.TypeOf(new(T)).Elem()
+	targetType := reflect.TypeFor[T]()
 
 	rt := rv.Type()
 	for i := 0; i < rt.NumField(); i++ {
