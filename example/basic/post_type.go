@@ -9,17 +9,22 @@ type innerPostType struct {
 
 var PostType = enums.Of(&struct {
 	enums.Enum[*innerPostType]
+	Unknown *innerPostType
 	Post,
 	Page,
-	Unknown *innerPostType
+	Note *innerPostType
 }{
-	Unknown: &innerPostType{
+	enums.Enum[*innerPostType]{},
+	&innerPostType{
 		CommentEnabled: false,
 	},
-	Page: &innerPostType{
-		CommentEnabled: false,
-	},
-	Post: &innerPostType{
+	&innerPostType{
 		CommentEnabled: true,
+	},
+	&innerPostType{
+		CommentEnabled: false,
+	},
+	&innerPostType{
+		CommentEnabled: false,
 	},
 })

@@ -100,13 +100,11 @@ func Of[T innerElement, E innerEnum[T]](v E) E {
 		rv = rv.Elem()
 	}
 
-	rt := rv.Type()
-
 	targetType := reflect.TypeOf(new(T)).Elem()
 
+	rt := rv.Type()
 	for i := 0; i < rt.NumField(); i++ {
 		fieldT := rt.Field(i)
-
 		if fieldT.Type == targetType {
 			v.add(fieldT.Name, rv.Field(i).Interface().(T))
 		}

@@ -7,7 +7,7 @@ import (
 
 func TestPostType(t *testing.T) {
 	values := basic.PostType.Values()
-	size := 3
+	size := 4
 	if len(values) != size {
 		t.Errorf("values length is not %d but %d", size, len(values))
 	}
