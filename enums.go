@@ -2,81 +2,113 @@ package enums
 
 import (
 	"reflect"
-	"strings"
 )
 
+type innerElement interface {
+	Name() string
+	Ordinal() int
+	setName(name string)
+	setOrdinal(ordinal int)
+}
+
 type Element struct {
+	name    string
+	ordinal int
 }
 
-type enum interface {
-	Values() []any
-	Add(v any)
+func (e *Element) setOrdinal(ordinal int) {
+	e.ordinal = ordinal
 }
 
-type Enum[T any] struct {
-	values []*T
+func (e *Element) setName(name string) {
+	e.name = name
 }
 
-func (e *Enum[T]) Values() []*T {
+func (e *Element) Name() string {
+	return e.name
+}
+func (e *Element) Ordinal() int {
+	return e.ordinal
+}
+
+type EnumHolder[T any] interface {
+	Values() []T
+	Names() []string
+	ValueOf(name string) *T
+}
+
+type innerEnum[T any] interface {
+	EnumHolder[T]
+
+	// Add
+	//
+	// Internal:
+	add(name string, v T)
+}
+
+type Enum[T innerElement] struct {
+	values []T
+	ofName map[string]T
+}
+
+func (e *Enum[T]) ValueOf(name string) *T {
 	if e == nil {
-		return []*T{}
+		return nil
+	}
+	v, ok := e.ofName[name]
+	if !ok {
+		return nil
+	}
+	return &v
+}
+
+func (e *Enum[T]) Values() []T {
+	if e == nil {
+		return []T{}
 	}
 	return e.values
 }
 
-// Add
-//
-// Internal:
-func (e *Enum[T]) Add(v *T) {
+func (e *Enum[T]) Names() []string {
+	if e == nil {
+		return []string{}
+	}
+	names := make([]string, 0, len(e.ofName))
+	for name := range e.ofName {
+		names = append(names, name)
+	}
+	return names
+}
+
+func (e *Enum[T]) add(name string, v T) {
 	if e == nil {
 		return
 	}
+	if e.ofName == nil {
+		e.ofName = make(map[string]T)
+	}
+	e.ofName[name] = v
+	v.setName(name)
+	v.setOrdinal(len(e.values))
 	e.values = append(e.values, v)
 }
 
-func unPtrValue(v reflect.Value) reflect.Value {
-	for v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	return v
-}
-
-func Of[T any](v T) T {
+func Of[T innerElement, E innerEnum[T]](v E) E {
 	rv := reflect.ValueOf(v)
-	rv = unPtrValue(rv)
+
+	for rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
+	}
 
 	rt := rv.Type()
 
-	var enumField reflect.Value
-	for i := 0; i < rt.NumField(); i++ {
-		fieldT := rt.Field(i)
-		fieldV := rv.Field(i)
-
-		if fieldT.Anonymous && strings.HasPrefix(fieldT.Type.String(), "*enums.Enum[") {
-			if fieldV.IsNil() {
-				newEnum := reflect.New(fieldT.Type.Elem())
-				fieldV.Set(newEnum)
-			}
-			enumField = fieldV
-			break
-		}
-	}
-
-	if !enumField.IsValid() {
-		panic("Enum field not found")
-	}
-
-	addMethod, ok := enumField.Type().MethodByName("Add")
-	if !ok {
-		panic("Add method not found")
-	}
+	targetType := reflect.TypeOf(new(T)).Elem()
 
 	for i := 0; i < rt.NumField(); i++ {
 		fieldT := rt.Field(i)
-		fieldV := rv.Field(i)
 
-		if fieldT.Type == enumField.Type().Elem().Field(0).Type.Elem() {
-			addMethod.Func.Call([]reflect.Value{enumField, fieldV})
+		if fieldT.Type == targetType {
+			v.add(fieldT.Name, rv.Field(i).Interface().(T))
 		}
 	}
 
