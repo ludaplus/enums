@@ -8,21 +8,24 @@ import (
 type innerElement interface {
 	Name() string
 	Ordinal() int
-	setName(name string)
-	setOrdinal(ordinal int)
+	initialize(name string, ordinal int)
+	IsValid() bool
 }
 
 type Element struct {
-	name    string
-	ordinal int
+	name        string
+	ordinal     int
+	initialized bool
 }
 
-func (e *Element) setOrdinal(ordinal int) {
-	e.ordinal = ordinal
+func (e *Element) IsValid() bool {
+	return e.initialized
 }
 
-func (e *Element) setName(name string) {
+func (e *Element) initialize(name string, ordinal int) {
 	e.name = name
+	e.ordinal = ordinal
+	e.initialized = true
 }
 
 func (e *Element) Name() string {
@@ -30,6 +33,14 @@ func (e *Element) Name() string {
 }
 func (e *Element) Ordinal() int {
 	return e.ordinal
+}
+
+func (e *Element) String() string {
+	return e.Name()
+}
+
+func (e *Element) MarshalJSON() ([]byte, error) {
+	return []byte(`"` + e.Name() + `"`), nil
 }
 
 type EnumHolder[T any] interface {
@@ -89,8 +100,7 @@ func (e *Enum[T]) add(name string, v T) {
 		e.ofName = make(map[string]T)
 	}
 	e.ofName[name] = v
-	v.setName(name)
-	v.setOrdinal(len(e.values))
+	v.initialize(name, len(e.values))
 	e.values = append(e.values, v)
 }
 

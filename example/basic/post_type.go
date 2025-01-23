@@ -2,29 +2,29 @@ package basic
 
 import "github.com/ludaplus/enums"
 
-type innerPostType struct {
+type PostTypeElement struct {
 	enums.Element
 	CommentEnabled bool
 }
 
 var PostType = enums.Of(&struct {
-	enums.Enum[*innerPostType]
+	enums.Enum[*PostTypeElement]
 	Unknown,
 	Post,
 	Page,
-	Note *innerPostType
+	Note *PostTypeElement
 }{
-	enums.Enum[*innerPostType]{},
-	&innerPostType{
+	enums.Enum[*PostTypeElement]{},
+	&PostTypeElement{
 		CommentEnabled: false,
 	},
-	&innerPostType{
+	&PostTypeElement{
 		CommentEnabled: true,
 	},
-	&innerPostType{
+	&PostTypeElement{
 		CommentEnabled: false,
 	},
-	&innerPostType{
+	&PostTypeElement{
 		CommentEnabled: false,
 	},
 })
