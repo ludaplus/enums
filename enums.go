@@ -3,7 +3,11 @@ package enums
 import (
 	"reflect"
 	"strings"
+	"sync"
 )
+
+var unmashals = make(map[reflect.Type]func(name string) any)
+var mu sync.Mutex
 
 type innerElement interface {
 	Name() string
@@ -12,35 +16,43 @@ type innerElement interface {
 	IsValid() bool
 }
 
-type Element struct {
+type Element[T innerElement] struct {
 	name        string
 	ordinal     int
 	initialized bool
 }
 
-func (e *Element) IsValid() bool {
+func (e *Element[T]) Equals(other T) bool {
+	return e != nil && e.Ordinal() == other.Ordinal()
+}
+
+func (e *Element[T]) IsValid() bool {
 	return e.initialized
 }
 
-func (e *Element) initialize(name string, ordinal int) {
+func (e *Element[T]) initialize(name string, ordinal int) {
 	e.name = name
 	e.ordinal = ordinal
 	e.initialized = true
 }
 
-func (e *Element) Name() string {
+func (e *Element[T]) Name() string {
 	return e.name
 }
-func (e *Element) Ordinal() int {
+func (e *Element[T]) Ordinal() int {
 	return e.ordinal
 }
 
-func (e *Element) String() string {
+func (e *Element[T]) String() string {
 	return e.Name()
 }
 
-func (e *Element) MarshalJSON() ([]byte, error) {
+func (e *Element[T]) MarshalJSON() ([]byte, error) {
 	return []byte(`"` + e.Name() + `"`), nil
+}
+
+func (e *Element[T]) UnmarshalHelper(name string) *T {
+	return unmashals[reflect.TypeFor[T]()](name).(*T)
 }
 
 type EnumHolder[T any] interface {
@@ -135,6 +147,15 @@ func Of[T innerElement, E innerEnum[T]](v E) E {
 			v.add(fieldT.Name, rv.Field(i).Interface().(T))
 		}
 	}
+
+	func() {
+		mu.Lock()
+		defer mu.Unlock()
+
+		unmashals[targetType] = func(name string) any {
+			return v.ValueOf(name)
+		}
+	}()
 
 	return v
 }

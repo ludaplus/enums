@@ -27,7 +27,7 @@ Define an inner Type for the element of the enum. The inner type should embed th
 
 ```go
 type innerPostType struct {
-	enums.Element
+	enums.Element[*innerPostType]
 	CommentEnabled bool
 }
 ```

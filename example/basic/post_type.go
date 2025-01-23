@@ -1,10 +1,23 @@
 package basic
 
-import "github.com/ludaplus/enums"
+import (
+	"encoding/json"
+	"github.com/ludaplus/enums"
+)
 
 type PostTypeElement struct {
-	enums.Element
+	enums.Element[*PostTypeElement]
 	CommentEnabled bool
+}
+
+func (e *PostTypeElement) UnmarshalJSON(data []byte) error {
+	var name string
+	err := json.Unmarshal(data, &name)
+	if err != nil {
+		return err
+	}
+	*e = **(e.Element.UnmarshalHelper(name))
+	return nil
 }
 
 var PostType = enums.Of(&struct {
