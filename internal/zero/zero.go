@@ -1,6 +1,7 @@
 package zero
 
 import (
+	"fmt"
 	"reflect"
 )
 
@@ -151,3 +152,50 @@ var StructPostTypes = OfStruct(struct {
 	Page,
 	Note PostTypeStruct
 }{})
+
+type PreElement[T any] struct {
+	Element
+	value T
+}
+
+func (e *PreElement[T]) Value() T {
+	return e.value
+}
+
+type EnumCreator[T any, E internalEnum[T]] func(e E) E
+type EnumElementCreator[T any] func(v T) PreElement[T]
+
+func Pre[T any, E internalEnum[T]]() (EnumCreator[T, E], EnumElementCreator[T]) {
+	return func(e E) E {
+			// TODO implement
+			return e
+		}, func(v T) PreElement[T] {
+			return PreElement[T]{value: v}
+		}
+}
+
+type (
+	PostTypePre struct {
+		CommentEnabled bool
+	}
+	preStruct struct {
+		Enum[*PostTypePre]
+		Unknown,
+		Post PreElement[*PostTypePre]
+	}
+)
+
+var enum, element = Pre[*PostTypePre, preStruct]()
+
+var PostTypePres = enum(preStruct{
+	Unknown: element(&PostTypePre{false}),
+	Post:    element(&PostTypePre{true}),
+})
+
+func preTest() {
+	fmt.Println(PostTypePres.Post.Value().CommentEnabled)
+}
+
+type Test[T any] struct {
+	v T
+}
